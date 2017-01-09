@@ -15,7 +15,7 @@ Map Data Across the Globe
 
 6. Hint: Here's a dataset you can use to build this: https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/meteorite-strike-data.json
 
-[Working demo at CodePen](http://codepen.io/van100j/full//)
+[Working demo at CodePen](https://codepen.io/van100j/full/PWPNKY/)
 
 ### Usage
 
