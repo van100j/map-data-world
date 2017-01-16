@@ -7,7 +7,6 @@ const {width, height} = body.node().getBoundingClientRect();
 // SVG
 const svg = body.append("svg").attr("width", width).attr("height", height);
 const atlas = svg.append("g").attr("class", "world")
-const meteorites = svg.append("g").attr("class", "meteorites").style("opacity", 0);
 
 // Scales & colors
 const sizeScale = d3.scalePow();
@@ -34,12 +33,14 @@ d3.json('https://d3js.org/world-110m.v1.json', (err, world) => {
   if(err) throw err;
 
   const countries = topojson.feature(world, world.objects.countries).features;
-  atlas.selectAll("path")
-       .data(countries)
+  atlas.selectAll("path.country")
+        .data(countries)
        .enter().append("path")
-       .attr("d", path);
+        .attr("class", "country")
+        .attr("d", path);
 
-  meteorites.transition(250).style("opacity", .99);
+
+  addMeteorites();
 
   svg.call(zoom);
 
@@ -47,21 +48,21 @@ d3.json('https://d3js.org/world-110m.v1.json', (err, world) => {
   zoom.transform(svg, d3.zoomIdentity.translate(tx, ty).scale(projection.scale()));
 });
 
-d3.json('https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/meteorite-strike-data.json', (err, json) => {
-  if(err) throw err;
+function addMeteorites() {
 
-  // filter points w/o coordinates, and put smaller on top of bigger
-  const data = json.features.filter((item) => !!item.geometry).sort((a, b) => +a.properties.mass == +b.properties.mass ? 0 : +a.properties.mass < +b.properties.mass ? 1 : -1);
+  d3.json('https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/meteorite-strike-data.json', (err, json) => {
+    if(err) throw err;
 
-  sizeScale.domain([d3.min(data, d => +d.properties.mass), d3.max(data, d => +d.properties.mass)]);
+    // filter points w/o coordinates, and put smaller on top of bigger
+    const data = json.features.filter((item) => !!item.geometry).sort((a, b) => +a.properties.mass == +b.properties.mass ? 0 : +a.properties.mass < +b.properties.mass ? 1 : -1);
 
-  meteorites.selectAll("circle")
+    sizeScale.domain([d3.min(data, d => +d.properties.mass), d3.max(data, d => +d.properties.mass)]);
+
+    atlas.selectAll("path.point")
             .data(data)
-            .enter().append("circle")
-            .attr("cx", d => projection(d.geometry.coordinates)[0])
-            .attr("cy", d => projection(d.geometry.coordinates)[1])
-            .attr("r", d => sizeScale(d.properties.mass))
-            .style("stroke", "rgba(255, 255, 255, .75)")
+           .enter().append("path")
+            .attr("class", "point")
+            .attr("d", d3.geoPath().pointRadius( d => sizeScale(d.properties.mass) ).projection(projection))
             .style("fill", (d, i) => color(i))
             .on("mouseenter", (d, i) => {
                 let [left, top] = projection(d.geometry.coordinates);
@@ -86,14 +87,17 @@ d3.json('https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/mas
                          .style("opacity", 0)
                          .style("visibility", "hidden");;
             });
-});
+  });
+
+}
 
 function zoomed() {
 
   const {x, y, k} = d3.event.transform;
 
   projection.translate([x, y]).scale(k);
-  atlas.selectAll("path").attr("d", path);
+  atlas.selectAll("path.country").attr("d", path);
+  atlas.selectAll("path.point").attr("d", d3.geoPath().pointRadius( d => sizeScale(d.properties.mass) ).projection(projection));
 
   //meteorites.attr("transform", "translate(" + x + ", " + y + ") scale(" + k / scale0 + ")");
   meteorites.selectAll("circle").attr("cx", d => projection(d.geometry.coordinates)[0]).attr("cy", d => projection(d.geometry.coordinates)[1]);

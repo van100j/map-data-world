@@ -1,4 +1,4 @@
-Map Data Across the Globe
+Map Data Across the Globe 
 =====================
 
 [FCC's Map Data Across the Globe challenge](https://www.freecodecamp.com/challenges/map-data-across-the-globe):
